@@ -84,9 +84,44 @@ class _HomeState extends State<Home> {
     return CustomPaint(painter: customPainter,);
 
   }
+  toggleCameraToFrontOrBack()async{
+    if(cameraLensDirection == CameraLensDirection.back){
+      cameraLensDirection = CameraLensDirection.front;
+    }else{
+      cameraLensDirection = CameraLensDirection.back;
+    }
+    await cameraController!.stopImageStream();
+    await cameraController!.dispose();
 
+    setState(() {
+      cameraController = null;
+    });
+    initCamera();
+  }
   @override
   Widget build(BuildContext context) {
+    List<Widget> stackWidgetChildren = [];
+    size = MediaQuery.of(context).size;
+    if(cameraController != null){
+      stackWidgetChildren.add(
+        Positioned(
+          top: 0,
+          left: 0,
+          width: size!.width,
+          height: size!.height-250,
+          child: Container(
+            child: (cameraController!.value.isInitialized)
+                ? AspectRatio(
+                aspectRatio: cameraController!.value.aspectRatio,
+                child: CameraPreview(cameraController),
+              )
+            )
+            : Container(),
+          ),
+
+        ),
+      );
+    }
     return Container();
   }
 }
