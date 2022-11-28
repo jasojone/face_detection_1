@@ -75,6 +75,16 @@ class _HomeState extends State<Home> {
     faceDetector!.close();
   }
 
+  Widget buildResult(){
+    if (scanResults == null || cameraController == null || !cameraController!.value.isInitialized) {
+      return const Text("");
+    }
+    final Size imageSize = Size(cameraController!.value.previewSize!.height, cameraController!.value.previewSize!.width);
+    CustomPainter customPainter = FaceDetectorPainter(imageSize, scanResults, cameraLensDirection);
+    return CustomPaint(painter: customPainter,);
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container();
@@ -103,13 +113,17 @@ class FaceDetectorPainter extends CustomPainter {
       canvas.drawRect(
           Rect.fromLTRB(
           cameraLensDirection == CameraLensDirection
-              .front?(absoluteImageSize.width - face.boundingBox.right * scaleX:face.boundingBox.left * scaleX,
+              .front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
           face.boundingBox.top * scaleY,
           cameraLensDirection == CameraLensDirection
-              .front?(absoluteImageSize.width - face.boundingBox.left * scaleX:face.boundingBox.right * scaleX,)))
+              .front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
+          face.boundingBox.bottom * scaleY,
+          ),
+          paint,
+      );
     }
-
   }
+
 
   @override
   bool shouldRepaint(FaceDetectorPainter oldDelegate) {
