@@ -40,6 +40,7 @@ class _HomeState extends State<Home> {
       cameraController!.startImageStream((imageFromStream) => {
         if(!isWorking){
           isWorking = true,
+          performDetectionOnStreamFrames(imageFromStream),
         }
         });
     });
@@ -113,16 +114,59 @@ class _HomeState extends State<Home> {
             child: (cameraController!.value.isInitialized)
                 ? AspectRatio(
                 aspectRatio: cameraController!.value.aspectRatio,
-                child: CameraPreview(cameraController),
+                child: CameraPreview(cameraController!),
               )
-            )
-            : Container(),
+                : Container(),
           ),
-
         ),
       );
     }
-    return Container();
+    stackWidgetChildren.add(
+      Positioned(
+        top: 0,
+        left: 0.0,
+        width: size!.width,
+        height: size!.height-250,
+        child: buildResult(),
+      )
+    );
+
+    stackWidgetChildren.add(
+        Positioned(
+          top: size!.height-250,
+          left: 0.0,
+          width: size!.width,
+          height: 250,
+          child: Container(
+            margin: EdgeInsets.only(bottom: 80),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                IconButton(
+                    onPressed: (){
+                      toggleCameraToFrontOrBack();
+                    },
+                    icon: Icon(Icons.cached, color: Colors.white,),
+                    iconSize: 50,
+                    color: Colors.black,
+                )
+              ],
+            ),
+          ),
+        )
+    );
+
+
+    return Scaffold(
+      body: Container(
+        margin: EdgeInsets.only(top: 0),
+        color: Colors.black,
+        child: Stack(
+          children: stackWidgetChildren,
+        ),
+      ),
+    );
   }
 }
 
