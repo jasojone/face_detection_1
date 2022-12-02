@@ -26,7 +26,7 @@ class _HomeState extends State<Home> {
   List<Face> facesList = [];
   CameraDescription? cameraDescription;
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
-  double? smileProb = 1;
+  double? smileProb;
 
   initCamera()async{
     // initCamera is called in initState so it is guaranteed to be called before
@@ -182,13 +182,6 @@ class _HomeState extends State<Home> {
                     iconSize: 50,
                     color: Colors.black,
                 ),
-                Text(
-                  smileProb.toString(),
-                  textAlign: TextAlign.center,
-                  textScaleFactor: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(100, 248, 248, 248)),
-                ),
               ],
             ),
           ),
@@ -206,7 +199,6 @@ class _HomeState extends State<Home> {
     );
   }
 }
-
 
 class FaceDetectorPainter extends CustomPainter {
   FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection, this.smileProb);
@@ -229,18 +221,23 @@ class FaceDetectorPainter extends CustomPainter {
     for (Face face in facesList) {
       canvas.drawRect(
           Rect.fromLTRB(
-          cameraLensDirection == CameraLensDirection
-              .front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
+          cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
           face.boundingBox.top * scaleY,
-          cameraLensDirection == CameraLensDirection
-              .front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
+
+          cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
           face.boundingBox.bottom * scaleY,
           ),
           paint,
       );
       // If classification was enabled:
       smileProb = face.smilingProbability;
-
+      if (face.boundingBox.size.height > 0.5) {
+        TextSpan span = TextSpan(style: TextStyle(color: Color.fromARGB(255, 255, 0, 0)), text: smileProb.toStringAsPrecision(2));
+        TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr, textScaleFactor: face.boundingBox.size.width/250);
+        tp.layout();
+        tp.paint(canvas, Offset(cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
+          face.boundingBox.bottomCenter.dy * scaleY,));
+      }
     }
   }
 
