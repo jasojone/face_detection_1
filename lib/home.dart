@@ -202,6 +202,10 @@ class _HomeState extends State<Home> {
 
 
 class FaceDetectorPainter extends CustomPainter {
+  //FaceDetectorPainter is a CustomPainter that is used to draw the results of
+  //the face detection on the screen. This is important because we want to draw
+  //the results of the face detection on the screen.
+
   FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection);
 
   final Size absoluteImageSize;
@@ -216,7 +220,7 @@ class FaceDetectorPainter extends CustomPainter {
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
-      ..color = Colors.red;
+      ..color = Colors.green;
 
     for (Face face in facesList) {
       canvas.drawRect(
@@ -231,6 +235,8 @@ class FaceDetectorPainter extends CustomPainter {
           paint,
       );
     }
+    // generate a function that draws the face contours
+    // draw the face contours on the canvas
   }
 
 
