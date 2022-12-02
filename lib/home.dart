@@ -26,6 +26,7 @@ class _HomeState extends State<Home> {
   List<Face> facesList = [];
   CameraDescription? cameraDescription;
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
+  double? smileProb = 1;
 
   initCamera()async{
     // initCamera is called in initState so it is guaranteed to be called before
@@ -104,7 +105,7 @@ class _HomeState extends State<Home> {
       return const Text("");
     }
     final Size imageSize = Size(cameraController!.value.previewSize!.height, cameraController!.value.previewSize!.width);
-    CustomPainter customPainter = FaceDetectorPainter(imageSize, scanResults, cameraLensDirection);
+    CustomPainter customPainter = FaceDetectorPainter(imageSize, scanResults, cameraLensDirection, smileProb!);
     return CustomPaint(painter: customPainter,);
 
   }
@@ -139,7 +140,7 @@ class _HomeState extends State<Home> {
           top: 0,
           left: 0,
           width: size!.width,
-          height: size!.height-250,
+          height: size!.height-150,
           child: Container(
             child: (cameraController!.value.isInitialized)
                 ? AspectRatio(
@@ -156,14 +157,14 @@ class _HomeState extends State<Home> {
         top: 0,
         left: 0.0,
         width: size!.width,
-        height: size!.height-250,
+        height: size!.height-150,
         child: buildResult(),
       )
     );
 
     stackWidgetChildren.add(
         Positioned(
-          top: size!.height-250,
+          top: size!.height-150,
           left: 0.0,
           width: size!.width,
           height: 250,
@@ -180,13 +181,19 @@ class _HomeState extends State<Home> {
                     icon: Icon(Icons.cached, color: Colors.white,),
                     iconSize: 50,
                     color: Colors.black,
-                )
+                ),
+                Text(
+                  smileProb.toString(),
+                  textAlign: TextAlign.center,
+                  textScaleFactor: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(100, 248, 248, 248)),
+                ),
               ],
             ),
           ),
         )
     );
-
 
     return Scaffold(
       body: Container(
@@ -202,11 +209,12 @@ class _HomeState extends State<Home> {
 
 
 class FaceDetectorPainter extends CustomPainter {
-  FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection);
+  FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection, this.smileProb);
 
   final Size absoluteImageSize;
   final List<Face> facesList;
   CameraLensDirection cameraLensDirection;
+  double smileProb;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -215,8 +223,8 @@ class FaceDetectorPainter extends CustomPainter {
 
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..color = Colors.red;
+      ..strokeWidth = 1.0
+      ..color = Colors.blue;
 
     for (Face face in facesList) {
       canvas.drawRect(
@@ -230,6 +238,9 @@ class FaceDetectorPainter extends CustomPainter {
           ),
           paint,
       );
+      // If classification was enabled:
+      smileProb = face.smilingProbability;
+
     }
   }
 
