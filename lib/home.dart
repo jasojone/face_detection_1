@@ -28,8 +28,11 @@ class _HomeState extends State<Home> {
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
 
   initCamera()async{
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
+    // initCamera is called in initState so it is guaranteed to be called before
+    // the first frame is rendered. This means that the camera is initialized
+    // before the first frame is rendered. This is important because the camera
+    // is initialized asynchronously and we want to make sure that the camera is
+    // initialized before we start rendering the camera preview.
     cameraDescription = await UtilsScanner.getCamera(cameraLensDirection);
     cameraController = CameraController(cameraDescription!, ResolutionPreset.high);
     faceDetector = FirebaseVision.instance.faceDetector(const FaceDetectorOptions(
@@ -53,8 +56,9 @@ class _HomeState extends State<Home> {
   dynamic scanResults;
 
   performDetectionOnStreamFrames(CameraImage cameraImage)async{
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
+    //performDetectionOnStreamFrames is called in the imageStream callback. This
+    //means that it is called every time a new frame is rendered. This is
+    //important because we want to perform the detection on every frame.
     UtilsScanner.detect(
       image: cameraImage,
       detectInImage: faceDetector!.processImage,
@@ -70,6 +74,10 @@ class _HomeState extends State<Home> {
 
   @override
   void initState() {
+    //initState is called before the first frame is rendered. This means that
+    //initCamera is called before the first frame is rendered. This is important
+    //because the camera is initialized asynchronously and we want to make sure
+    //that the camera is initialized before we start rendering the camera preview.
     super.initState();
     initCamera();
 
@@ -77,13 +85,21 @@ class _HomeState extends State<Home> {
 
   @override
   void dispose() {
-    // TODO: implement dispose
+    //dispose is called when the widget is removed from the widget tree. This
+    //means that the camera is disposed when the widget is removed from the
+    //widget tree. This is important because the camera is disposed
+    //asynchronously and we want to make sure that the camera is disposed before
+    //we remove the widget from the widget tree.
+
     super.dispose();
     cameraController?.dispose();
     faceDetector!.close();
   }
 
   Widget buildResult(){
+    //buildResult is called in the build method. This means that it is called
+    //every time the build method is called. This is important because we want
+    //to display the results every time the build method is called.
     if (scanResults == null || cameraController == null || !cameraController!.value.isInitialized) {
       return const Text("");
     }
@@ -93,6 +109,10 @@ class _HomeState extends State<Home> {
 
   }
   toggleCameraToFrontOrBack()async{
+    //toggleCameraToFrontOrBack is called when the user taps on the camera
+    //toggle button. This means that the camera is toggled when the user taps on
+    //the camera toggle button. This is important because we want to toggle the
+    //camera when the user taps on the camera toggle button.
     if(cameraLensDirection == CameraLensDirection.back){
       cameraLensDirection = CameraLensDirection.front;
     }else{
@@ -108,6 +128,9 @@ class _HomeState extends State<Home> {
   }
   @override
   Widget build(BuildContext context) {
+    //build is called every time the state changes. This means that the camera
+    //preview is rendered every time the state changes. This is important because
+    //we want to render the camera preview every time the state changes.
     List<Widget> stackWidgetChildren = [];
     size = MediaQuery.of(context).size;
     if(cameraController != null){
