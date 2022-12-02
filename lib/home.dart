@@ -26,7 +26,7 @@ class _HomeState extends State<Home> {
   List<Face> facesList = [];
   CameraDescription? cameraDescription;
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
-  double? smileProb;
+  double? smileProb = 0;
 
   initCamera()async{
     // initCamera is called in initState so it is guaranteed to be called before
@@ -200,6 +200,9 @@ class _HomeState extends State<Home> {
   }
 }
 
+  //FaceDetectorPainter is a CustomPainter that is used to draw the results of
+  //the face detection on the screen. This is important because we want to draw
+  //the results of the face detection on the screen.
 class FaceDetectorPainter extends CustomPainter {
   FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection, this.smileProb);
 
@@ -216,7 +219,7 @@ class FaceDetectorPainter extends CustomPainter {
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
-      ..color = Colors.blue;
+      ..color = Colors.green;
 
     for (Face face in facesList) {
       canvas.drawRect(
@@ -239,6 +242,8 @@ class FaceDetectorPainter extends CustomPainter {
           face.boundingBox.bottomCenter.dy * scaleY,));
       }
     }
+    // generate a function that draws the face contours
+    // draw the face contours on the canvas
   }
 
 
