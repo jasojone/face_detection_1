@@ -15,7 +15,10 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
   bool isWorking = false;
   CameraController? cameraController;
   FaceDetector? faceDetector;
@@ -25,6 +28,8 @@ class _HomeState extends State<Home> {
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
 
   initCamera()async{
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
     cameraDescription = await UtilsScanner.getCamera(cameraLensDirection);
     cameraController = CameraController(cameraDescription!, ResolutionPreset.high);
     faceDetector = FirebaseVision.instance.faceDetector(const FaceDetectorOptions(
@@ -48,6 +53,8 @@ class _HomeState extends State<Home> {
   dynamic scanResults;
 
   performDetectionOnStreamFrames(CameraImage cameraImage)async{
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
     UtilsScanner.detect(
       image: cameraImage,
       detectInImage: faceDetector!.processImage,
