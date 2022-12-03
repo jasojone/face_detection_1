@@ -26,6 +26,7 @@ class _HomeState extends State<Home> {
   List<Face> facesList = [];
   CameraDescription? cameraDescription;
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
+  double? smileProb = 0;
 
   initCamera()async{
     // initCamera is called in initState so it is guaranteed to be called before
@@ -104,7 +105,7 @@ class _HomeState extends State<Home> {
       return const Text("");
     }
     final Size imageSize = Size(cameraController!.value.previewSize!.height, cameraController!.value.previewSize!.width);
-    CustomPainter customPainter = FaceDetectorPainter(imageSize, scanResults, cameraLensDirection);
+    CustomPainter customPainter = FaceDetectorPainter(imageSize, scanResults, cameraLensDirection, smileProb!);
     return CustomPaint(painter: customPainter,);
 
   }
@@ -139,7 +140,7 @@ class _HomeState extends State<Home> {
           top: 0,
           left: 0,
           width: size!.width,
-          height: size!.height-250,
+          height: size!.height-150,
           child: Container(
             child: (cameraController!.value.isInitialized)
                 ? AspectRatio(
@@ -156,14 +157,14 @@ class _HomeState extends State<Home> {
         top: 0,
         left: 0.0,
         width: size!.width,
-        height: size!.height-250,
+        height: size!.height-150,
         child: buildResult(),
       )
     );
 
     stackWidgetChildren.add(
         Positioned(
-          top: size!.height-250,
+          top: size!.height-150,
           left: 0.0,
           width: size!.width,
           height: 250,
@@ -180,13 +181,12 @@ class _HomeState extends State<Home> {
                     icon: Icon(Icons.cached, color: Colors.white,),
                     iconSize: 50,
                     color: Colors.black,
-                )
+                ),
               ],
             ),
           ),
         )
     );
-
 
     return Scaffold(
       body: Container(
@@ -200,17 +200,16 @@ class _HomeState extends State<Home> {
   }
 }
 
-
-class FaceDetectorPainter extends CustomPainter {
   //FaceDetectorPainter is a CustomPainter that is used to draw the results of
   //the face detection on the screen. This is important because we want to draw
   //the results of the face detection on the screen.
-
-  FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection);
+class FaceDetectorPainter extends CustomPainter {
+  FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection, this.smileProb);
 
   final Size absoluteImageSize;
   final List<Face> facesList;
   CameraLensDirection cameraLensDirection;
+  double smileProb;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -219,21 +218,29 @@ class FaceDetectorPainter extends CustomPainter {
 
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
+      ..strokeWidth = 1.0
       ..color = Colors.green;
 
     for (Face face in facesList) {
       canvas.drawRect(
           Rect.fromLTRB(
-          cameraLensDirection == CameraLensDirection
-              .front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
+          cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
           face.boundingBox.top * scaleY,
-          cameraLensDirection == CameraLensDirection
-              .front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
+
+          cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
           face.boundingBox.bottom * scaleY,
           ),
           paint,
       );
+      // If classification was enabled:
+      smileProb = face.smilingProbability;
+      if (face.boundingBox.size.height > 0.5) {
+        TextSpan span = TextSpan(style: TextStyle(color: Color.fromARGB(255, 255, 0, 0)), text: smileProb.toStringAsPrecision(2));
+        TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr, textScaleFactor: face.boundingBox.size.width/250);
+        tp.layout();
+        tp.paint(canvas, Offset(cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
+          face.boundingBox.bottomCenter.dy * scaleY,));
+      }
     }
     // generate a function that draws the face contours
     // draw the face contours on the canvas
