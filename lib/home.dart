@@ -16,7 +16,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
+  // case the title) provided by the parent (in this case the App widget) andup
   // used by the build method of the State. Fields in a Widget subclass are
   // always marked "final".
   bool isWorking = false;
