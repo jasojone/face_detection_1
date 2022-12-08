@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
@@ -9,7 +8,7 @@ import 'package:flutter/foundation.dart';
 class UtilsScanner{
   UtilsScanner._();
 
-  // This fucntion returns gets the list of available cameras and then sets the
+  // This function returns gets the list of available cameras and then sets the
   // camera description to the first one that matches the lens direction
   static Future<CameraDescription> getCamera(CameraLensDirection cameraLensDirection) async {
     return await availableCameras().then(

@@ -6,16 +6,15 @@ import 'home.dart';
 List<CameraDescription>? cameras;
 
 // Main function that calls runApp on our root widget.
-Future<void> main() async{
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
   runApp(const MyApp());
 }
 
+// This widget is the root widget of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  // This widget is the root widget of the application.
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -23,7 +22,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: Home(),
+      home: const Home(),
     );
   }
 }

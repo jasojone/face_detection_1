@@ -1,8 +1,5 @@
-
-
 import 'package:camera/camera.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'utils_scanner.dart';
 
@@ -60,12 +57,14 @@ class _HomeState extends State<Home> {
           width: size!.width,
           height: size!.height-150,
           child: Container(
-            child: (cameraController!.value.isInitialized)
-                ? AspectRatio(
-                aspectRatio: cameraController!.value.aspectRatio,
-                child: CameraPreview(cameraController!),
-              )
-                : Container(),
+            child:(cameraController!.value.isInitialized) ?
+                  AspectRatio(
+                    aspectRatio: cameraController!.value.aspectRatio,
+                    child: CameraPreview(cameraController!),
+                  )
+                : Container(
+                  color : Colors.black,
+                ),
           ),
         ),
       );
@@ -90,7 +89,7 @@ class _HomeState extends State<Home> {
           width: size!.width,
           height: 250,
           child: Container(
-            margin: EdgeInsets.only(bottom: 80),
+            margin: const EdgeInsets.only(bottom: 80),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -99,20 +98,20 @@ class _HomeState extends State<Home> {
                     onPressed: (){
                       toggleCameraToFrontOrBack();
                     },
-                    icon: Icon(Icons.cached, color: Colors.white,),
+                    icon: const Icon(Icons.cached, color: Colors.white,),
                     iconSize: 60,
-                    color: Color.fromARGB(255, 57, 57, 57),
+                    color: const Color.fromARGB(255, 57, 57, 57),
                 ),
               ],
             ),
           ),
         )
-    );
+      );
 
     // build returns Scaffold widget with the stackWidgetChildren list as a child
     return Scaffold(
       body: Container(
-        margin: EdgeInsets.only(top: 0),
+        margin: const EdgeInsets.only(top: 0),
         color: Colors.black,
         child: Stack(
           children: stackWidgetChildren,
@@ -121,8 +120,8 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // This fucntion is called in initstate().
-  // The UstilScanner class is used to get the camera information which is passed to a dart CameraController.
+  // This function is called in initstate().
+  // The UtilScanner class is used to get the camera information which is passed to a dart CameraController.
   // We also initialize the ML face detector class from firebase in this function, and when the camera is initialized
   // we perform ML facial detection on the stream provided by the camera.
   initCamera()async{
@@ -147,9 +146,9 @@ class _HomeState extends State<Home> {
     });
   }
 
-  // This fucntion is called when the user taps on the switch camera button and switches the camera direction
+  // This function is called when the user taps on the switch camera button and switches the camera direction
   // before stopping the image stream and disposing of the CameraController object.
-  toggleCameraToFrontOrBack()async{
+  toggleCameraToFrontOrBack() async {
     if(cameraLensDirection == CameraLensDirection.back){
       cameraLensDirection = CameraLensDirection.front;
     } else {
@@ -193,7 +192,7 @@ class _HomeState extends State<Home> {
   }
 }
 
-// This class is inherits from CustomPainter widget, and is essentially used to
+// This class is inherits from CustomPainter interface, and is essentially used to
 // generate graphics related to the facial detection data passed in.
 class FaceDetectorPainter extends CustomPainter {
   FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection, this.smileProb);
@@ -237,7 +236,7 @@ class FaceDetectorPainter extends CustomPainter {
       // Generate text for smile prediction below each box containing a face
       if (face.boundingBox.size.height > 0.5) {
         TextSpan span = TextSpan(
-          style: TextStyle(color: Color.fromARGB(255, 255, 0, 0)),
+          style: const TextStyle(color: Color.fromARGB(255, 255, 0, 0)),
           text: smileProb.toStringAsPrecision(2)
           );
         TextPainter tp = TextPainter(
@@ -259,10 +258,11 @@ class FaceDetectorPainter extends CustomPainter {
   }
 
   // Called whenever a new instance of the custom painter delegate class is provided to the object.
-  // If it is changed then repain.
+  // If it is changed then repaint.
   @override
   bool shouldRepaint(FaceDetectorPainter oldDelegate) {
     return oldDelegate.absoluteImageSize != absoluteImageSize ||
         oldDelegate.facesList != facesList;
   }
 }
+
