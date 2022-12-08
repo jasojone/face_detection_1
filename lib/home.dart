@@ -217,7 +217,7 @@ class FaceDetectorPainter extends CustomPainter {
 
     final Paint paint2 = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0
+      ..strokeWidth = 2.0
       ..color = Colors.red;
 
     for (Face face in facesList) {
@@ -231,7 +231,7 @@ class FaceDetectorPainter extends CustomPainter {
             cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
             face.boundingBox.bottom * scaleY,
           ),
-          (smileProb > .75)  ? paint : paint2,
+          (smileProb > .75)  ? paint2 : paint,
       );
       
       // Generate text for smile prediction below each box containing a face
