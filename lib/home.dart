@@ -13,6 +13,7 @@ class Home extends StatefulWidget {
 // This class is the configuration for the state. It holds the values associated with the camera and facial detection
 // and is used by the build method of the State.
 class _HomeState extends State<Home> {
+
   bool isWorking = false;
   CameraController? cameraController;
   FaceDetector? faceDetector;
