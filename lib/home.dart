@@ -1,10 +1,6 @@
-
-
 import 'package:camera/camera.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'utils_scanner.dart';
 
 class Home extends StatefulWidget {
@@ -14,11 +10,10 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
+// This class is the configuration for the state. It holds the values associated with the camera and facial detection
+// and is used by the build method of the State.
 class _HomeState extends State<Home> {
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) andup
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+
   bool isWorking = false;
   CameraController? cameraController;
   FaceDetector? faceDetector;
@@ -27,25 +22,122 @@ class _HomeState extends State<Home> {
   CameraDescription? cameraDescription;
   CameraLensDirection cameraLensDirection = CameraLensDirection.front;
   double? smileProb = 0;
+  dynamic scanResults;
 
+  // Called when this object is inserted into the widget tree.
+  // We first call the base class initState function, and then initialize the camera.
+  @override
+  void initState() {
+    super.initState();
+    initCamera();
+  }
+
+  // Called when this object is removed from the widget tree permanently.
+  // This stage of the the objects lifecycle is terminal; there is no way to remount
+  // a State object that has been disposed.
+  @override
+  void dispose() {
+    super.dispose();
+    cameraController?.dispose();
+    faceDetector!.close();
+  }
+
+  // Describes the part of the UI represented by the widget.
+  // Framework calls this method when widget is inserted into the tree after initState()
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> stackWidgetChildren = [];
+    size = MediaQuery.of(context).size;
+
+    // Add UI camera display widget to list
+    if(cameraController != null){
+      stackWidgetChildren.add(
+        Positioned(
+          top: 0,
+          left: 0,
+          width: size!.width,
+          height: size!.height-150,
+          child: Container(
+            child:(cameraController!.value.isInitialized) ?
+                  AspectRatio(
+                    aspectRatio: cameraController!.value.aspectRatio,
+                    child: CameraPreview(cameraController!),
+                  )
+                : Container(
+                  color : Colors.black,
+                ),
+          ),
+        ),
+      );
+    }
+
+    // Add UI for facial detection graphics widget to list
+    stackWidgetChildren.add(
+      Positioned(
+        top: 0,
+        left: 0.0,
+        width: size!.width,
+        height: size!.height-150,
+        child: buildResult(),
+      )
+    );
+
+    // Add UI for button widget to list
+    stackWidgetChildren.add(
+        Positioned(
+          top: size!.height-150,
+          left: 0.0,
+          width: size!.width,
+          height: 250,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 80),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                IconButton(
+                    onPressed: (){
+                      toggleCameraToFrontOrBack();
+                    },
+                    icon: const Icon(Icons.cached, color: Colors.white,),
+                    iconSize: 60,
+                    color: const Color.fromARGB(255, 57, 57, 57),
+                ),
+              ],
+            ),
+          ),
+        )
+      );
+
+    // build returns Scaffold widget with the stackWidgetChildren list as a child
+    return Scaffold(
+      body: Container(
+        margin: const EdgeInsets.only(top: 0),
+        color: Colors.black,
+        child: Stack(
+          children: stackWidgetChildren,
+        ),
+      ),
+    );
+  }
+
+  // This function is called in initstate().
+  // The UtilScanner class is used to get the camera information which is passed to a dart CameraController.
+  // We also initialize the ML face detector class from firebase in this function, and when the camera is initialized
+  // we perform ML facial detection on the stream provided by the camera.
   initCamera()async{
-    // initCamera is called in initState so it is guaranteed to be called before
-    // the first frame is rendered. This means that the camera is initialized
-    // before the first frame is rendered. This is important because the camera
-    // is initialized asynchronously and we want to make sure that the camera is
-    // initialized before we start rendering the camera preview.
     cameraDescription = await UtilsScanner.getCamera(cameraLensDirection);
     cameraController = CameraController(cameraDescription!, ResolutionPreset.high);
     faceDetector = FirebaseVision.instance.faceDetector(const FaceDetectorOptions(
       enableClassification: true,
       minFaceSize: 0.1,
       mode: FaceDetectorMode.accurate,
-      // enableFaceTracking: true,
     ));
     await cameraController!.initialize().then((value){
       if (!mounted) {
         return;
       }
+      //If we are not performing detection, take in imagestream and perform detection
       cameraController!.startImageStream((imageFromStream) => {
         if(!isWorking){
           isWorking = true,
@@ -54,12 +146,28 @@ class _HomeState extends State<Home> {
         });
     });
   }
-  dynamic scanResults;
 
-  performDetectionOnStreamFrames(CameraImage cameraImage)async{
-    //performDetectionOnStreamFrames is called in the imageStream callback. This
-    //means that it is called every time a new frame is rendered. This is
-    //important because we want to perform the detection on every frame.
+  // This function is called when the user taps on the switch camera button and switches the camera direction
+  // before stopping the image stream and disposing of the CameraController object.
+  toggleCameraToFrontOrBack() async {
+    if(cameraLensDirection == CameraLensDirection.back){
+      cameraLensDirection = CameraLensDirection.front;
+    } else {
+      cameraLensDirection = CameraLensDirection.back;
+    }
+    await cameraController!.stopImageStream();
+    await cameraController!.dispose();
+
+    // Notifies the framework the internal state of the widget has changes and needs to be rebuilt.
+    setState(() {
+      cameraController = null;
+    });
+    initCamera();
+  }
+
+  // performDetectionOnStreamFrames is called in the imageStream callback for every available frame.
+  // We use the detect method from our UtilsScanner class  
+  performDetectionOnStreamFrames(CameraImage cameraImage) async {
     UtilsScanner.detect(
       image: cameraImage,
       detectInImage: faceDetector!.processImage,
@@ -73,136 +181,20 @@ class _HomeState extends State<Home> {
     });
   }
 
-  @override
-  void initState() {
-    //initState is called before the first frame is rendered. This means that
-    //initCamera is called before the first frame is rendered. This is important
-    //because the camera is initialized asynchronously and we want to make sure
-    //that the camera is initialized before we start rendering the camera preview.
-    super.initState();
-    initCamera();
-
-  }
-
-  @override
-  void dispose() {
-    //dispose is called when the widget is removed from the widget tree. This
-    //means that the camera is disposed when the widget is removed from the
-    //widget tree. This is important because the camera is disposed
-    //asynchronously and we want to make sure that the camera is disposed before
-    //we remove the widget from the widget tree.
-
-    super.dispose();
-    cameraController?.dispose();
-    faceDetector!.close();
-  }
-
+  // This is called in build(). It gets data from the camera controller and then creates a new instance of a FaceDetectorPainter,
+  // which is used to return a CustomPaint widget, a widget that paints graphics.
   Widget buildResult(){
-    //buildResult is called in the build method. This means that it is called
-    //every time the build method is called. This is important because we want
-    //to display the results every time the build method is called.
     if (scanResults == null || cameraController == null || !cameraController!.value.isInitialized) {
       return const Text("");
     }
     final Size imageSize = Size(cameraController!.value.previewSize!.height, cameraController!.value.previewSize!.width);
     CustomPainter customPainter = FaceDetectorPainter(imageSize, scanResults, cameraLensDirection, smileProb!);
     return CustomPaint(painter: customPainter,);
-
-  }
-  toggleCameraToFrontOrBack()async{
-    //toggleCameraToFrontOrBack is called when the user taps on the camera
-    //toggle button. This means that the camera is toggled when the user taps on
-    //the camera toggle button. This is important because we want to toggle the
-    //camera when the user taps on the camera toggle button.
-    if(cameraLensDirection == CameraLensDirection.back){
-      cameraLensDirection = CameraLensDirection.front;
-    }else{
-      cameraLensDirection = CameraLensDirection.back;
-    }
-    await cameraController!.stopImageStream();
-    await cameraController!.dispose();
-
-    setState(() {
-      cameraController = null;
-    });
-    initCamera();
-  }
-  @override
-  Widget build(BuildContext context) {
-    //build is called every time the state changes. This means that the camera
-    //preview is rendered every time the state changes. This is important because
-    //we want to render the camera preview every time the state changes.
-    List<Widget> stackWidgetChildren = [];
-    size = MediaQuery.of(context).size;
-    if(cameraController != null){
-      stackWidgetChildren.add(
-        Positioned(
-          top: 0,
-          left: 0,
-          width: size!.width,
-          height: size!.height-150,
-          child: Container(
-            child: (cameraController!.value.isInitialized)
-                ? AspectRatio(
-                aspectRatio: cameraController!.value.aspectRatio,
-                child: CameraPreview(cameraController!),
-              )
-                : Container(),
-          ),
-        ),
-      );
-    }
-    stackWidgetChildren.add(
-      Positioned(
-        top: 0,
-        left: 0.0,
-        width: size!.width,
-        height: size!.height-150,
-        child: buildResult(),
-      )
-    );
-
-    stackWidgetChildren.add(
-        Positioned(
-          top: size!.height-150,
-          left: 0.0,
-          width: size!.width,
-          height: 250,
-          child: Container(
-            margin: EdgeInsets.only(bottom: 80),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                IconButton(
-                    onPressed: (){
-                      toggleCameraToFrontOrBack();
-                    },
-                    icon: Icon(Icons.cached, color: Colors.white,),
-                    iconSize: 50,
-                    color: Colors.black,
-                ),
-              ],
-            ),
-          ),
-        )
-    );
-
-    return Scaffold(
-      body: Container(
-        margin: EdgeInsets.only(top: 0),
-        color: Colors.black,
-        child: Stack(
-          children: stackWidgetChildren,
-        ),
-      ),
-    );
   }
 }
 
-  //FaceDetectorPainter is a CustomPainter that is used to draw the results of
-  //the face detection on the screen. This is important because we want to draw
-  //the results of the face detection on the screen.
+// This class is inherits from CustomPainter interface, and is essentially used to
+// generate graphics related to the facial detection data passed in.
 class FaceDetectorPainter extends CustomPainter {
   FaceDetectorPainter(this.absoluteImageSize, this.facesList, this.cameraLensDirection, this.smileProb);
 
@@ -216,40 +208,62 @@ class FaceDetectorPainter extends CustomPainter {
     final double scaleX = size.width / absoluteImageSize.width;
     final double scaleY = size.height / absoluteImageSize.height;
 
+    // Cascade Notation Operator used
+    // Allows performance of a sequence of methods on same object
     final Paint paint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
       ..color = Colors.green;
 
+    final Paint paint2 = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..color = Colors.red;
+
     for (Face face in facesList) {
+      smileProb = face.smilingProbability;
+
+      //Draw rectangles based on face data
       canvas.drawRect(
           Rect.fromLTRB(
-          cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
-          face.boundingBox.top * scaleY,
-
-          cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
-          face.boundingBox.bottom * scaleY,
+            cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
+            face.boundingBox.top * scaleY,
+            cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.left) * scaleX:face.boundingBox.right * scaleX,
+            face.boundingBox.bottom * scaleY,
           ),
-          paint,
+          (smileProb > .75)  ? paint2 : paint,
       );
-      // If classification was enabled:
-      smileProb = face.smilingProbability;
+      
+      // Generate text for smile prediction below each box containing a face
       if (face.boundingBox.size.height > 0.5) {
-        TextSpan span = TextSpan(style: TextStyle(color: Color.fromARGB(255, 255, 0, 0)), text: smileProb.toStringAsPrecision(2));
-        TextPainter tp = TextPainter(text: span, textAlign: TextAlign.left, textDirection: TextDirection.ltr, textScaleFactor: face.boundingBox.size.width/250);
+        TextSpan span = TextSpan(
+          style: const TextStyle(color: Color.fromARGB(255, 255, 0, 0)),
+          text: smileProb.toStringAsPrecision(2)
+          );
+        TextPainter tp = TextPainter(
+          text: span,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr,
+          textScaleFactor: face.boundingBox.size.width/250
+          );
         tp.layout();
-        tp.paint(canvas, Offset(cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
-          face.boundingBox.bottomCenter.dy * scaleY,));
+        tp.paint(
+          canvas,
+          Offset(
+            cameraLensDirection == CameraLensDirection.front?(absoluteImageSize.width - face.boundingBox.right) * scaleX:face.boundingBox.left * scaleX,
+            face.boundingBox.bottomCenter.dy * scaleY,
+          )
+        );
       }
     }
-    // generate a function that draws the face contours
-    // draw the face contours on the canvas
   }
 
-
+  // Called whenever a new instance of the custom painter delegate class is provided to the object.
+  // If it is changed then repaint.
   @override
   bool shouldRepaint(FaceDetectorPainter oldDelegate) {
     return oldDelegate.absoluteImageSize != absoluteImageSize ||
         oldDelegate.facesList != facesList;
   }
 }
+
